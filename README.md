@@ -7,7 +7,9 @@ Legacy MATLAB-based processing pipelines often induce severe I/O bottlenecks whe
 ## Key Features
 - **High Performance (I/O Optimization):** Utilizes the `stop_before_pixels=True` parameter to bypass heavy image decoding, reading only the header to maximize processing speed.
 - **Batch Processing:** Automatically iterates through all subject folders within a designated root directory to execute hierarchical foldering.
+- **Multi-Extension Support:** Seamlessly handles multi-vendor datasets by identifying both `.IMA` (Siemens) and `.dcm` (GE/Philips) file extensions, regardless of case-sensitivity.
 - **Robust Path Handling:** Implements regex-based sanitization to remove special characters that are invalid for directory names, ensuring safe path generation.
+- **CLI Integration:** Built with `argparse` for seamless integration into automated shell scripts and MLOps pipelines.
 - **Progress Tracking:** Integrates the `tqdm` library for intuitive real-time monitoring of progress and error logging per subject.
 
 ## Prerequisites
@@ -25,31 +27,32 @@ pip install pydicom tqdm
 ## Usage
 
 ### 1. Configuration
-Open `organize_dicoms_by_protocol.py` (or copy the source code below) and navigate to the bottom of the script. Update the `source_directory` variable with the absolute path to the root folder containing your subject data.
-
-```python
-if __name__ == "__main__":
-    # Replace this string with the absolute path to your clinical dataset
-    source_directory = r'/absolute/path/to/your/dataset' 
-    organize_dicoms_by_protocol(source_directory)
-```
-
-### 2. Execution
-Run the script from your terminal. The `tqdm` progress bar will display the sorting status for each subject in real-time.
+Run the script from your terminal, passing the absolute path to your dataset's root directory as an argument. The `tqdm` progress bar will display the sorting status for each subject in real-time.
 
 ```bash
-python organize_dicoms_by_protocol.py
+# Command Syntax
+python organize_dicoms_by_protocol.py /absolute/path/to/your/dataset
+```
+
+**Example:**
+```bash
+python organize_dicoms_by_protocol.py H:\2_MRI_data\4_YC_MK
+```
+
+You can also use the `-h` or `--help` flag to see the built-in documentation:
+```bash
+python organize_dicoms_by_protocol.py --help
 ```
 
 ## Directory Structure
-This script acts on a root directory that contains individual subject folders. It scans each subject folder and reorganizes the unsorted DICOM (`*.IMA`) files into distinct sub-directories named after their respective MRI protocol.
+This script acts on a root directory that contains individual subject folders. It scans each subject folder and reorganizes the unsorted DICOM (`*.IMA`, `*.dcm`) files into distinct sub-directories named after their respective MRI protocol.
 
 **Before Execution (Raw Data)**
 ```text
 /path/to/your/dataset/
 ├── SUBJ_001/                  
 │   ├── 0001.IMA               
-│   ├── 0002.IMA
+│   ├── 0002.dcm
 │   └── ...
 └── SUBJ_002/
     ├── 0001.IMA
@@ -64,7 +67,7 @@ This script acts on a root directory that contains individual subject folders. I
 │   │   ├── 0001.IMA
 │   │   └── ...
 │   └── DTI_64DIR_b1000/       
-│       ├── 0050.IMA
+│       ├── 0002.dcm
 │       └── ...
 └── SUBJ_002/
     ├── T1_MPRAGE_SAG/
