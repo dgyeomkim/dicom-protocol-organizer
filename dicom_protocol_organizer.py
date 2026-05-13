@@ -26,7 +26,8 @@ def organize_dicoms_by_protocol(base_dir: str):
 
     for subject_dir in subject_dirs:
         # 2. Search for .IMA files within the subject folder (use rglob('*.IMA') to search subdirectories as well)
-        dicom_files = list(subject_dir.glob('*.IMA'))
+        #dicom_files = list(subject_dir.glob('*.IMA'))
+        dicom_files = [f for f in subject_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.ima', '.dcm']]
         
         if not dicom_files:
             print(f"Skipping folder [{subject_dir.name}]: No *.IMA files found.")
