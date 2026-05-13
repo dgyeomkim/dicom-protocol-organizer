@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import argparse
 from pathlib import Path
 import pydicom
 from tqdm import tqdm
@@ -8,7 +9,7 @@ from tqdm import tqdm
 def organize_dicoms_by_protocol(base_dir: str):
     """
     Iterates through all subject folders within the specified root directory and
-    categorizes DICOM (*.IMA) files in each folder into subfolders based on their MRI protocol (SeriesDescription).
+    categorizes DICOM (*.IMA, *.dcm) files in each folder into subfolders based on their MRI protocol (SeriesDescription).
     """
     base_path = Path(base_dir)
     
@@ -25,12 +26,11 @@ def organize_dicoms_by_protocol(base_dir: str):
     print(f"Found a total of {len(subject_dirs)} subject folders. Starting processing...\n")
 
     for subject_dir in subject_dirs:
-        # 2. Search for .IMA files within the subject folder (use rglob('*.IMA') to search subdirectories as well)
-        #dicom_files = list(subject_dir.glob('*.IMA'))
+        # 2. Search for DICOM files (.IMA, .dcm) within the subject folder (case-insensitive)
         dicom_files = [f for f in subject_dir.iterdir() if f.is_file() and f.suffix.lower() in ['.ima', '.dcm']]
         
         if not dicom_files:
-            print(f"Skipping folder [{subject_dir.name}]: No *.IMA files found.")
+            print(f"Skipping folder [{subject_dir.name}]: No *.IMA or *.dcm files found.")
             continue
 
         # Progress bar using tqdm
@@ -47,7 +47,7 @@ def organize_dicoms_by_protocol(base_dir: str):
                 
                 target_dir = subject_dir / protocol_name
                 
-                # Create target directory if it doesn't exist (exist_ok=True prevents duplicate creation errors)
+                # Create target directory if it doesn't exist
                 target_dir.mkdir(parents=True, exist_ok=True)
                 
                 target_file = target_dir / dicom_file.name
@@ -60,9 +60,19 @@ def organize_dicoms_by_protocol(base_dir: str):
 
     print("\nProtocol-based foldering completed for all subjects.")
 
-# Execution Example
 if __name__ == "__main__":
-    # Specify the path to the root data directory (which contains all subject folders)
-    # Example: Assume folders like SUBJ_001, SUBJ_002 are located inside /path/to/your/dataset
-    source_directory = r'/path/to/your/dataset'  # REPLACE WITH YOUR ACTUAL PATH BEFORE RUNNING LOCALLY
-    organize_dicoms_by_protocol(source_directory)
+    # Setup command-line argument parsing
+    parser = argparse.ArgumentParser(
+        description="Fast DICOM Protocol Organizer: Sorts DICOM files (*.IMA, *.dcm) into subfolders by MRI protocol."
+    )
+    
+    parser.add_argument(
+        "source_directory",
+        type=str,
+        help="The absolute path to the root dataset directory containing subject folders."
+    )
+    
+    args = parser.parse_args()
+    
+    # Execute the function with the provided CLI argument
+    organize_dicoms_by_protocol(args.source_directory)
